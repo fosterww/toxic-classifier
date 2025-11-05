@@ -52,7 +52,7 @@ def _load_jigsaw_if_exists(limit:int|None=20000) -> pd.DataFrame | None:
     text_col = "comment_text" if "comment_text" in df.columns else "text"
     if text_col not in df.columns:
         raise ValueError(
-            f"Не найден текстовый столбец в {path}. Ожидал 'comment_text' или 'text'."
+            f"Text column not found in {path}. Expected ‘comment_text’ or ‘text’."
         )
 
     if "toxic" in df.columns:
@@ -62,7 +62,7 @@ def _load_jigsaw_if_exists(limit:int|None=20000) -> pd.DataFrame | None:
         multilabel_cols = [c for c in df.columns if c not in {text_col}]
         if not multilabel_cols:
             raise ValueError(
-                f"В {path} нет столбца 'toxic' и нет мульти-классов для свертки."
+                f"There in {path} is no ‘toxic’ column and no multi-classes for convolution."
             )
         out = df[[text_col] + multilabel_cols].rename(columns={text_col: "text"})
         out["label"] = (out[multilabel_cols].sum(axis=1) > 0).astype(int)
@@ -81,7 +81,7 @@ def _load_extra_if_exists() -> pd.DataFrame | None:
     df = pd.read_csv(path)
     need = {"text", "label"}
     if not need.issubset(df.columns):
-        raise ValueError(f"{path} должен содержать колонки {need}")
+        raise ValueError(f"{path} must contain columns {need}")
     df = df.dropna(subset=["text", "label"])
     df["text"] = df["text"].astype(str).str.strip()
     df["label"] = df["label"].astype(int)
@@ -100,7 +100,7 @@ def load_sources() -> pd.DataFrame:
 
     if not dfs:
         raise FileNotFoundError(
-            "Не нашли данных. Положи 'jigsaw_train.csv' или 'train.csv' и/или 'extra_ru_ua.csv' в data/raw/."
+            "No data found. Place ‘jigsaw_train.csv’ or ‘train.csv’ and/or ‘extra_ru_ua.csv’ in data/raw/."
         )
 
     all_df = pd.concat(dfs, ignore_index=True)
