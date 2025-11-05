@@ -14,6 +14,7 @@ try:
     from app.utils import clean_text
 except Exception:
     import sys
+
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from app.utils import clean_text
 
@@ -37,7 +38,8 @@ def _norm_text(s: str) -> str:
 def _hash_group(s: str) -> str:
     return hashlib.sha1(_norm_text(s).encode("utf-8")).hexdigest()
 
-def _load_jigsaw_if_exists(limit:int|None=20000) -> pd.DataFrame | None:
+
+def _load_jigsaw_if_exists(limit: int | None = 20000) -> pd.DataFrame | None:
     candidates = [
         RAW / "jigsaw_train.csv",
         RAW / "train.csv",
@@ -56,7 +58,9 @@ def _load_jigsaw_if_exists(limit:int|None=20000) -> pd.DataFrame | None:
         )
 
     if "toxic" in df.columns:
-        out = df[[text_col, "toxic"]].rename(columns={text_col: "text", "toxic": "label"})
+        out = df[[text_col, "toxic"]].rename(
+            columns={text_col: "text", "toxic": "label"}
+        )
         out["label"] = (out["label"] >= 1).astype(int)
     else:
         multilabel_cols = [c for c in df.columns if c not in {text_col}]
@@ -118,7 +122,9 @@ def group_split(df, val_size: float, test_size: float, seed: int):
     df = df.copy()
     df["__group"] = df["text"].map(_hash_group)
 
-    gss1 = GroupShuffleSplit(n_splits=1, test_size=(val_size + test_size), random_state=seed)
+    gss1 = GroupShuffleSplit(
+        n_splits=1, test_size=(val_size + test_size), random_state=seed
+    )
     train_idx, temp_idx = next(gss1.split(df, groups=df["__group"]))
     train_df = df.iloc[train_idx].reset_index(drop=True)
     temp_df = df.iloc[temp_idx].reset_index(drop=True)
@@ -134,18 +140,24 @@ def group_split(df, val_size: float, test_size: float, seed: int):
 
     return train_df, val_df, test_df
 
+
 def main(
     val_size: float = DEFAULT_VAL_SIZE,
     test_size: float = DEFAULT_TEST_SIZE,
     seed: int = DEFAULT_SEED,
 ):
     print("=== PREPARE DATA ===")
-    print("RAW:", RAW); print("OUT:", OUT)
+    print("RAW:", RAW)
+    print("OUT:", OUT)
     df = load_sources()
 
     df["norm"] = df["text"].map(clean_text)
     before = len(df)
-    df = df.drop_duplicates(subset=["norm"]).drop(columns=["norm"]).reset_index(drop=True)
+    df = (
+        df.drop_duplicates(subset=["norm"])
+        .drop(columns=["norm"])
+        .reset_index(drop=True)
+    )
     print(f"[DEDUP] exact duplicates removed: {before - len(df)} | remain: {len(df)}")
 
     y = df["label"].values
@@ -153,18 +165,29 @@ def main(
     idx_trainval, idx_test = next(sss1.split(df, y))
     trainval, test_df = df.iloc[idx_trainval], df.iloc[idx_test]
     y_tv = trainval["label"].values
-    sss2 = StratifiedShuffleSplit(n_splits=1, test_size=val_size/(1-test_size), random_state=seed)
+    sss2 = StratifiedShuffleSplit(
+        n_splits=1, test_size=val_size / (1 - test_size), random_state=seed
+    )
     idx_train, idx_val = next(sss2.split(trainval, y_tv))
     train_df, val_df = trainval.iloc[idx_train], trainval.iloc[idx_val]
 
-    for name, d in [("ALL", df), ("train", train_df), ("val", val_df), ("test", test_df)]:
-        pos = int((d["label"]==1).sum()); n=len(d)
-        print(f"{name:>5}: n={n:4d} | pos={pos:4d} | neg={n-pos:4d} | pos_ratio={pos/n: .3f}")
+    for name, d in [
+        ("ALL", df),
+        ("train", train_df),
+        ("val", val_df),
+        ("test", test_df),
+    ]:
+        pos = int((d["label"] == 1).sum())
+        n = len(d)
+        print(
+            f"{name:>5}: n={n:4d} | pos={pos:4d} | neg={n-pos:4d} | pos_ratio={pos/n: .3f}"
+        )
 
-    train_df.to_csv(OUT/"train.csv", index=False)
-    val_df.to_csv(OUT/"val.csv", index=False)
-    test_df.to_csv(OUT/"test.csv", index=False)
+    train_df.to_csv(OUT / "train.csv", index=False)
+    val_df.to_csv(OUT / "val.csv", index=False)
+    test_df.to_csv(OUT / "test.csv", index=False)
     print("Saved train/val/test.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

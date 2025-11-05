@@ -1,4 +1,8 @@
-import json, joblib, os
+import json
+import os
+
+import joblib
+
 
 def test_model_exists_and_loads():
     assert os.path.exists("models/metadata.json")

@@ -14,6 +14,7 @@ DATA = Path("data/processed")
 MODELS = Path("models")
 MODELS.mkdir(exist_ok=True)
 
+
 def load_data():
     train = pd.read_csv(DATA / "train.csv")
     val = pd.read_csv(DATA / "val.csv")
@@ -21,15 +22,14 @@ def load_data():
     val["text"] = val["text"].astype(str)
     return train, val
 
+
 def build_pipeline():
     return Pipeline(
         steps=[
             (
                 "tfidf",
                 TfidfVectorizer(
-                    ngram_range=(1, 2),
-                    max_features=100_000,
-                    lowercase=True
+                    ngram_range=(1, 2), max_features=100_000, lowercase=True
                 ),
             ),
             (
@@ -43,6 +43,7 @@ def build_pipeline():
             ),
         ]
     )
+
 
 def main():
     train_df, val_df = load_data()
@@ -77,6 +78,7 @@ def main():
 
     print(f"[OK] Saved model -> {model_path}")
     print(f"[METRIC] val macro-F1: {macro_f1:.4f} | train_time: {train_time:.2f}s")
+
 
 if __name__ == "__main__":
     main()

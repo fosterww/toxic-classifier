@@ -1,17 +1,22 @@
-import json, joblib, numpy as np, pandas as pd
+import json
 from pathlib import Path
-from sklearn.model_selection import StratifiedKFold
+
+import joblib
+import numpy as np
+import pandas as pd
 from sklearn.metrics import f1_score
+from sklearn.model_selection import StratifiedKFold
 
 DATA = Path("data/processed")
 MODELS = Path("models")
 
+
 def main(k=5):
-    tr = pd.read_csv(DATA/"train.csv")
+    tr = pd.read_csv(DATA / "train.csv")
     X = tr["text"].astype(str).values
     y = tr["label"].values
 
-    meta_path = MODELS/"metadata.json"
+    meta_path = MODELS / "metadata.json"
     meta = json.load(open(meta_path, encoding="utf-8"))
     model = joblib.load(meta["model_file"])
 
@@ -20,7 +25,7 @@ def main(k=5):
     f1s = np.zeros_like(ts, dtype=float)
 
     for _, val_idx in skf.split(X, y):
-        proba = model.predict_proba(X[val_idx])[:,1]
+        proba = model.predict_proba(X[val_idx])[:, 1]
         yv = y[val_idx]
         for i, t in enumerate(ts):
             pred = (proba >= t).astype(int)
@@ -35,6 +40,7 @@ def main(k=5):
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2, ensure_ascii=False)
     print("[META UPDATED] threshold saved.")
+
 
 if __name__ == "__main__":
     main()

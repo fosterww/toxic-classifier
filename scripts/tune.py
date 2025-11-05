@@ -1,7 +1,8 @@
-import json, joblib
+import json
 from datetime import datetime
 from pathlib import Path
 
+import joblib
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -13,6 +14,7 @@ try:
     from app.utils import clean_text
 except Exception:
     import sys
+
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from app.utils import clean_text
 
@@ -23,24 +25,31 @@ MODELS.mkdir(exist_ok=True)
 PARAM_GRID = {
     "tfidf__min_df": [1, 2, 3],
     "tfidf__max_df": [0.9, 0.95],
-    "tfidf__ngram_range": [(1,1), (1,2)],
+    "tfidf__ngram_range": [(1, 1), (1, 2)],
     "clf__C": [0.5, 1.0, 2.0],
 }
 
+
 def build_pipeline():
-    return Pipeline([
-        ("tfidf", TfidfVectorizer(max_features=50_000)),
-        ("clf", LogisticRegression(
-            class_weight="balanced",
-            max_iter=1500,
-            n_jobs=-1,
-            random_state=42,
-        )),
-    ])
+    return Pipeline(
+        [
+            ("tfidf", TfidfVectorizer(max_features=50_000)),
+            (
+                "clf",
+                LogisticRegression(
+                    class_weight="balanced",
+                    max_iter=1500,
+                    n_jobs=-1,
+                    random_state=42,
+                ),
+            ),
+        ]
+    )
+
 
 def main():
-    train = pd.read_csv(DATA/"train.csv")
-    val = pd.read_csv(DATA/"val.csv")
+    train = pd.read_csv(DATA / "train.csv")
+    val = pd.read_csv(DATA / "val.csv")
 
     for df in (train, val):
         df["text"] = df["text"].astype(str).map(clean_text)
@@ -59,9 +68,9 @@ def main():
     best = gs.best_estimator_
     best.fit(
         pd.concat([train["text"], val["text"]]),
-        pd.concat([train["label"], val["label"]])
+        pd.concat([train["label"], val["label"]]),
     )
-    
+
     val_pred = gs.best_estimator_.predict(val["text"])
     val_f1 = f1_score(val["label"], val_pred, average="macro")
 
@@ -79,7 +88,7 @@ def main():
         "cv": 3,
         "notes": "clean_text applied; refit on train+val",
     }
-    with open(MODELS/"metadata.json", "w", encoding="utf-8") as f:
+    with open(MODELS / "metadata.json", "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2, ensure_ascii=False)
 
     hist = MODELS / "history.csv"
@@ -92,6 +101,7 @@ def main():
     print("[BEST PARAMS]", gs.best_params_)
     print(f"[VAL macro-F1] {val_f1:.4f}")
     print("[SAVED]", model_path)
+
 
 if __name__ == "__main__":
     main()

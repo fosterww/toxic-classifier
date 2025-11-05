@@ -5,20 +5,19 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    classification_report,
-    confusion_matrix,
-    roc_auc_score,
-)
+from sklearn.metrics import (classification_report, confusion_matrix,
+                             roc_auc_score)
 
 DATA = Path("data/processed")
 MODELS = Path("models")
-ART = Path("notebooks") 
+ART = Path("notebooks")
+
 
 def load_latest_model():
     meta = json.load(open(MODELS / "metadata.json", encoding="utf-8"))
     model = joblib.load(meta["model_file"])
     return model, meta
+
 
 def plot_confusion(cm: np.ndarray, out_path: Path, labels=("clean", "toxic")):
     fig = plt.figure(figsize=(4, 4))
@@ -33,6 +32,7 @@ def plot_confusion(cm: np.ndarray, out_path: Path, labels=("clean", "toxic")):
     plt.tight_layout()
     fig.savefig(out_path, dpi=200)
     plt.close(fig)
+
 
 def main(split="test"):
     df = pd.read_csv(DATA / f"{split}.csv")
@@ -58,8 +58,10 @@ def main(split="test"):
     except Exception as e:
         print("[WARN] ROC-AUC not available:", e)
 
+
 if __name__ == "__main__":
     import argparse
+
     p = argparse.ArgumentParser()
     p.add_argument("--split", choices=["val", "test"], default="test")
     args = p.parse_args()
