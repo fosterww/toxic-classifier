@@ -1,0 +1,19 @@
+{
+  "created_at": "20251105_2008",
+  "model_file": "models\\model_20251105_2008.joblib",
+  "features": "tfidf grid-tuned",
+  "best_params": {
+    "clf__C": 0.5,
+    "tfidf__max_df": 0.9,
+    "tfidf__min_df": 1,
+    "tfidf__ngram_range": [
+      1,
+      1
+    ]
+  },
+  "clf": "logreg(class_weight=balanced)",
+  "val_macro_f1": 1.0,
+  "cv": 3,
+  "notes": "clean_text applied; refit on train+val",
+  "threshold": 0.2
+}

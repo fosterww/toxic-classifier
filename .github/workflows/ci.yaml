@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.11" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install pre-commit
+
+      - name: Pre-commit (black/isort/etc)
+        run: |
+          pre-commit run --all-files
+
+      - name: Create tiny dataset
+        run: |
+          mkdir -p data/raw data/processed
+          cat > data/raw/extra_ru_ua.csv <<'CSV'
+            text,label
+            you dumb,1
+            thanks for help,0
+            idiot!,1
+            great post!,0
+            how terrible,1
+            i like it,0
+            CSV
+
+      - name: Prepare splits
+        run: |
+          python scripts/prepare_data.py
+          ls -lah data/processed
+
+      - name: Train baseline (fast)
+        run: |
+          python scripts/train.py
+          ls -lah models
+          cat models/metadata.json
+
+      - name: Run tests
+        run: |
+          pytest -q
+
+
