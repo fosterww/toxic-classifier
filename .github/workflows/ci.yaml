@@ -39,7 +39,7 @@ jobs:
       - name: Create tiny dataset
         run: |
           mkdir -p data/raw data/processed
-          cat > data/raw/extra_ru_ua.csv <<'CSV'
+          cat > data/raw/train.csv <<'CSV'
             text,label
             you dumb,1
             thanks for help,0
