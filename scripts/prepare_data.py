@@ -51,10 +51,14 @@ def _load_jigsaw_if_exists(limit: int | None = 20000) -> pd.DataFrame | None:
     df = pd.read_csv(path)
     if limit is not None and len(df) > limit:
         df = df.sample(n=limit, random_state=42)
-    text_col = "comment_text" if "comment_text" in df.columns else "text"
-    if text_col not in df.columns:
+
+    if "comment_text" in df.columns:
+        text_col = "comment_text"
+    elif "text" in df.columns:
+        text_col = "text"
+    else:
         raise ValueError(
-            f"Text column not found in {path}. Expected ‘comment_text’ or ‘text’."
+            f"Text column not found in {path}. Expected 'comment_text' or 'text'. Found columns: {df.columns.tolist()}"
         )
 
     if "toxic" in df.columns:
@@ -66,7 +70,7 @@ def _load_jigsaw_if_exists(limit: int | None = 20000) -> pd.DataFrame | None:
         multilabel_cols = [c for c in df.columns if c not in {text_col}]
         if not multilabel_cols:
             raise ValueError(
-                f"There in {path} is no ‘toxic’ column and no multi-classes for convolution."
+                f"There in {path} is no 'toxic' column and no multi-classes for convolution."
             )
         out = df[[text_col] + multilabel_cols].rename(columns={text_col: "text"})
         out["label"] = (out[multilabel_cols].sum(axis=1) > 0).astype(int)
