@@ -39,15 +39,15 @@ jobs:
       - name: Create tiny dataset
         run: |
           mkdir -p data/raw data/processed
-          cat > data/raw/train.csv <<'CSV'
-            text,label
-            you dumb,1
-            thanks for help,0
-            idiot!,1
-            great post!,0
-            how terrible,1
-            i like it,0
-            CSV
+          cat > data/raw/training.csv <<'CSV'
+          text,label
+          you dumb,1
+          thanks for help,0
+          idiot!,1
+          great post!,0
+          how terrible,1
+          i like it,0
+          CSV
 
       - name: Prepare splits
         run: |
