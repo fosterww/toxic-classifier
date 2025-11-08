@@ -1,4 +1,3 @@
-# ...existing code...
 import json
 import os
 from pathlib import Path
@@ -25,13 +24,11 @@ def load_model():
     _model_meta = meta
     MODEL_VERSION = meta.get("created", meta.get("created_at", "v1"))
 
-    # Pick up threshold from metadata if present (preferred over env)
     if "threshold" in meta:
         _MODEL_THRESHOLD = float(meta["threshold"])
     else:
         _MODEL_THRESHOLD = THRESHOLD
 
-    # Detect whether training applied clean_text before fitting
     notes = str(meta.get("notes", "")).lower()
     preprocess = meta.get("preprocess", {})
     if isinstance(preprocess, dict):
@@ -41,7 +38,6 @@ def load_model():
 
     model_file = Path(meta["model_file"])
     if not model_file.exists():
-        # try resolving relative to models dir
         model_file = MODELS / meta["model_file"]
 
     logger.info("Loading model_file=%s meta=%s", model_file, meta)
@@ -49,7 +45,6 @@ def load_model():
     logger.info("Model loaded type=%s", type(_model))
     logger.info("Model threshold=%s apply_clean=%s", _MODEL_THRESHOLD, _APPLY_CLEAN)
 
-    # Smoke test to surface unexpected behavior early
     try:
         sample = "you are idiot"
         input_for_model = clean_text(sample) if _APPLY_CLEAN else sample
@@ -74,7 +69,6 @@ def predict_one(text: str):
     raw = text
     cleaned = clean_text(text)
 
-    # Decide whether to supply cleaned text based on metadata (fallback to pipeline heuristic)
     if _APPLY_CLEAN is not None:
         use_clean = _APPLY_CLEAN
     else:
@@ -94,7 +88,12 @@ def predict_one(text: str):
     low_confidence = (proba < max(_MODEL_THRESHOLD, LOW_CONF_FLOOR)) or (
         len(cleaned) < SHORT_LEN
     )
+
+    logger.info(
+        "predict len=%d label=%s prob=%.3f low_conf=%s",
+        len(text),
+        label,
+        proba,
+        low_confidence,
+    )
     return {"label": label, "prob": proba, "low_confidence": low_confidence}
-
-
-# ...existing code...

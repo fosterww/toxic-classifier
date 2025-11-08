@@ -1,9 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class HealthOut(BaseModel):
     status: str
     model_version: str
+
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class PredictIn(BaseModel):
