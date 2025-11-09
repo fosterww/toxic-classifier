@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import HealthOut, PredictIn, PredictOut, FeedbackIn, FeedbackOut
 from app.predict import predict_one, load_model, MODEL_VERSION
 from app.utils import logger
+from app.db import SessionLocal
+from app.db_models import Feedback, Prediction
 
 ALLOWED_ORIGINS = os.getenv("CORS_ORIGIN", "*").split(",")
 
@@ -46,8 +48,16 @@ def health():
 
 @app.post("/predict", response_model=PredictOut, tags=["inference"])
 def predict(payload: PredictIn):
+    db = SessionLocal()
     try:
         result = predict_one(payload.text)
+        prediction = Prediction(
+            text=payload.text,
+            pred_label=result["label"],
+            prob=result["prob"],
+        )
+        db.add(prediction)
+        db.commit()
         logger.info(
             "predict len=%d label=%s prob=%.3f low_conf=%s",
             len(payload.text),
@@ -63,11 +73,17 @@ def predict(payload: PredictIn):
 
 @app.post("/feedback", response_model=FeedbackOut, tags=["feedback"])
 def feedback(item: FeedbackIn):
+    db = SessionLocal()
     try:
-        with open(FEED, "a", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
-            w.writerow([datetime.utcnow().isoformat(), item.text, item.true_label])
+        f = Feedback(text=item.text, pred_label="?", true_label=item.true_label)
+        db.add(f)
+        db.commit()
+        db.refresh(f)
+        logger.info("feedback saved id=%d", f.id)
         return {"status": "stored"}
     except Exception as e:
-        logger.exception("Feedback failed: %s", e)
-        raise HTTPException(status_code=500, detail="internal error")
+        db.rollback()
+        logger.exception("DB feedback failed: %s", e)
+        raise HTTPException(status_code=500, detail="db error")
+    finally:
+        db.close()
