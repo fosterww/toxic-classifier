@@ -61,5 +61,7 @@ jobs:
           cat models/metadata.json
 
       - name: Run tests
+        env:
+          DATABASE_URL: sqlite:///./test.db
         run: |
           pytest -q

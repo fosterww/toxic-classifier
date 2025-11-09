@@ -8,6 +8,8 @@ from app.db_models import Base
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL is None:
+    DATABASE_URL = "sqlite:///./test.db"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
