@@ -36,9 +36,36 @@ def load_model():
     else:
         _APPLY_CLEAN = "clean_text" in notes
 
-    model_file = Path(meta["model_file"])
+    raw_model_path = str(meta["model_file"])
+    model_file = Path(raw_model_path)
     if not model_file.exists():
-        model_file = MODELS / meta["model_file"]
+        norm = Path(raw_model_path.replace("\\", "/"))
+        candidate = MODELS / norm
+        if candidate.exists():
+            model_file = candidate
+        else:
+            parts = norm.parts
+            if parts and parts[0].lower() == "models":
+                stripped = Path(*parts[1:]) if len(parts) > 1 else Path(parts[0])
+                candidate2 = MODELS / stripped
+                if candidate2.exists():
+                    model_file = candidate2
+                else:
+                    candidate3 = MODELS / norm.name
+                    if candidate3.exists():
+                        model_file = candidate3
+            else:
+                candidate3 = MODELS / norm.name
+                if candidate3.exists():
+                    model_file = candidate3
+
+    if not model_file.exists():
+        logger.error(
+            "Model file not found. Tried meta['model_file']=%s and candidates under %s",
+            raw_model_path,
+            MODELS,
+        )
+        raise FileNotFoundError(f"Model file not found: {raw_model_path}")
 
     logger.info("Loading model_file=%s meta=%s", model_file, meta)
     _model = joblib.load(model_file)
