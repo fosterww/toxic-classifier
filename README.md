@@ -1,6 +1,6 @@
 #  Toxicity Classifier API
 
-Простой, но production-style сервис для классификации токсичности комментариев.  
+Простой, но production-style сервис для классификации токсичности комментариев.
 Полный цикл: **данные → модель → API → Docker → feedback loop → retrain.**
 
 ---
@@ -9,8 +9,8 @@
 
 Проект классифицирует текстовые комментарии на 2 класса:
 
-- `clean` — не токсичный  
-- `toxic` — токсичный  
+- `clean` — не токсичный
+- `toxic` — токсичный
 
 Сервис предоставляет REST API на FastAPI и поддерживает переобучение модели на новых примерах (feedback loop).
 
@@ -20,14 +20,14 @@
 
 ## 2. Features
 
--  **Модель:** Logistic Regression + TF-IDF  
--  **Метрики:** macro-F1, ROC-AUC, Confusion matrix  
--  **FastAPI endpoints:**  
-  - `GET /health` — статус сервиса  
-  - `POST /predict` — классификация текста  
-  - `POST /feedback` — сохранение размеченных примеров  
--  **Feedback loop:** retrain модели на собранных примерах  
--  **Docker** — готовый образ для деплоя  
+-  **Модель:** Logistic Regression + TF-IDF
+-  **Метрики:** macro-F1, ROC-AUC, Confusion matrix
+-  **FastAPI endpoints:**
+  - `GET /health` — статус сервиса
+  - `POST /predict` — классификация текста
+  - `POST /feedback` — сохранение размеченных примеров
+-  **Feedback loop:** retrain модели на собранных примерах
+-  **Docker** — готовый образ для деплоя
 -  **Тесты:** pytest для модели и API
 
 ---
@@ -44,7 +44,7 @@ text,label
 "you are stupid",1
 ```
 
-Сплит: **70% train / 15% val / 15% test**  
+Сплит: **70% train / 15% val / 15% test**
 Хранятся в `data/processed/`.
 
 ---
@@ -84,10 +84,10 @@ toxic-classifier/
 │  ├─ 01_eda_baseline.ipynb
 │  └─ confusion_test.png
 ├─ app/
-│  ├─ main.py         
-│  ├─ predict.py      
-│  ├─ schemas.py       
-│  └─ utils.py         
+│  ├─ main.py
+│  ├─ predict.py
+│  ├─ schemas.py
+│  └─ utils.py
 ├─ scripts/
 │  ├─ prepare_data.py
 │  ├─ train.py
@@ -211,9 +211,9 @@ docker-compose up --build
 ```
 
 **Policy:**
-- toxic ↔ prob ≥ THRESHOLD  
+- toxic ↔ prob ≥ THRESHOLD
 - `low_confidence = true` если:
-  - `prob < max(THRESHOLD, LOW_CONF_FLOOR)`  
+  - `prob < max(THRESHOLD, LOW_CONF_FLOOR)`
   - или `len(clean_text) < SHORT_LEN`
 
 ### `POST /feedback`
@@ -225,7 +225,7 @@ docker-compose up --build
 
 ---
 
-## 9. Feedback Loop 
+## 9. Feedback Loop
 
 1. API принимает фидбек → `data/feedback.csv`
 3. Новая модель сохраняется → `models/model_YYYYMMDD_HHMM.joblib`
@@ -233,4 +233,4 @@ docker-compose up --build
 
 ---
 
-Автор: fosterww 
+Автор: fosterww
